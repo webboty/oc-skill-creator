@@ -3,13 +3,18 @@
 Skill Initializer - Creates a new skill from template
 
 Usage:
-    init_skill.py <skill-name> --path <path> [--resources scripts,references,assets] [--examples]
+    init_skill.py <skill-name> --path <parent-dir> [--resources scripts,references,assets] [--examples]
+
+Creates <parent-dir>/<skill-name>/. Validate and package that folder, not <parent-dir>.
 
 Examples:
-    init_skill.py my-new-skill --path skills/public
-    init_skill.py my-new-skill --path skills/public --resources scripts,references
-    init_skill.py my-api-helper --path skills/private --resources scripts --examples
+    init_skill.py my-new-skill --path ~/.config/opencode/skills
+    init_skill.py my-new-skill --path .opencode/skills --resources scripts,references
+    init_skill.py my-api-helper --path .opencode/skills --resources scripts --examples
     init_skill.py custom-skill --path /custom/location
+
+Modified from Anthropic's skill-creator (https://github.com/anthropics/skills),
+Apache License 2.0.
 """
 
 import argparse
@@ -326,7 +331,8 @@ def init_skill(skill_name, path, resources, include_examples):
         print(
             "2. Create resource directories only if needed (scripts/, references/, assets/)"
         )
-    print("3. Run the validator when ready to check the skill structure")
+    validator = Path(__file__).resolve().parent / "quick_validate.py"
+    print(f"3. Validate when ready: python3 {validator} {skill_dir}")
 
     return skill_dir
 
@@ -336,7 +342,11 @@ def main():
         description="Create a new skill directory with a SKILL.md template.",
     )
     parser.add_argument("skill_name", help="Skill name (normalized to hyphen-case)")
-    parser.add_argument("--path", required=True, help="Output directory for the skill")
+    parser.add_argument(
+        "--path",
+        required=True,
+        help="Parent directory; the skill is created at <path>/<skill-name>",
+    )
     parser.add_argument(
         "--resources",
         default="",

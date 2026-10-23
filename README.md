@@ -4,36 +4,46 @@ An [AgentSkill](https://agentskills.io/specification) for [OpenCode](https://ope
 
 ## Install
 
-oc-skill-creator is built for [OpenCode](https://opencode.ai/docs/skills/) and follows the open [AgentSkills](https://agentskills.io/specification) format, so it also loads in other harnesses (see below). Pick one:
+**OpenCode (recommended)** — one command, then restart OpenCode:
 
-**OpenCode (recommended)** — put the `oc-skill-creator/` folder in a skills directory, then restart the agent:
+```bash
+git clone https://github.com/webboty/oc-skill-creator ~/.config/opencode/skills/oc-skill-creator
+```
 
-| Method       | Command                                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- |
-| git clone    | `git clone https://github.com/webboty/oc-skill-creator ~/.config/opencode/skill/oc-skill-creator`                |
-| Download ZIP | [Code → Download ZIP](https://github.com/webboty/oc-skill-creator/archive/refs/heads/main.zip), unzip, move the `oc-skill-creator/` folder to `~/.config/opencode/skill/` |
-| Per-project  | same folder inside a project: `.opencode/skill/oc-skill-creator/`                                                  |
+Update later with `git -C ~/.config/opencode/skills/oc-skill-creator pull`. OpenCode searches the clone for the `SKILL.md` inside it, so the extra repo files do no harm. For one project only, clone into `.opencode/skills/oc-skill-creator` instead.
 
-**Other AgentSkills-compatible harnesses** — same folder, different drop location:
+**Claude Code and other harnesses** — these expect `SKILL.md` exactly one level down, so copy only the inner skill folder:
 
-| Harness     | Global path                    | Project path               |
-| ----------- | ------------------------------ | -------------------------- |
-| OpenCode    | `~/.config/opencode/skill/`  | `.opencode/skill/`         |
-| Claude Code | `~/.claude/skills/`          | `.claude/skills/`        |
-| Any harness | point its skill loader at the folder — the SKILL.md format is portable |
+```bash
+git clone https://github.com/webboty/oc-skill-creator /tmp/oc-skill-creator
+mkdir -p ~/.claude/skills
+cp -R /tmp/oc-skill-creator/oc-skill-creator ~/.claude/skills/
+```
 
-The guidance and references are harness-neutral; only the install paths differ. The bundled scripts are plain Python 3 (only `quick_validate.py` has a dep: `pip install pyyaml`).
+No git? [Download the ZIP](https://github.com/webboty/oc-skill-creator/archive/refs/heads/main.zip), unzip it, and move the inner `oc-skill-creator/` folder into a skills directory.
+
+**Where the folder goes:**
+
+| Harness     | Global path                  | Project path        |
+| ----------- | ---------------------------- | ------------------- |
+| OpenCode    | `~/.config/opencode/skills/` | `.opencode/skills/` |
+| Claude Code | `~/.claude/skills/`          | `.claude/skills/`   |
+| Any harness | point its skill loader at the folder — the SKILL.md format is portable | |
+
+OpenCode also loads the singular `skill/` folders and `~/.claude/skills/` and `~/.agents/skills/`. Use the plural `skills/` from the OpenCode docs.
+
+The guidance and references are harness-neutral; only the install paths differ. The bundled scripts are plain Python 3. `quick_validate.py` and `package_skill.py` need PyYAML (`pip install pyyaml`); `init_skill.py` needs nothing.
 
 ## What's in the box
 
-| Path                              | Purpose                                                    |
-| --------------------------------- | ---------------------------------------------------------- |
-| `SKILL.md`                        | The skill: principles, anatomy, 6-step creation process   |
-| `scripts/init_skill.py`         | Scaffold a new skill directory from template               |
-| `scripts/package_skill.py`      | Validate + zip a skill into a distributable `.skill` file  |
-| `scripts/quick_validate.py`     | Standalone frontmatter/structure validation                |
-| `references/workflows.md`       | Multi-step process patterns (sequential, routing, loops)   |
-| `references/output-patterns.md` | Output format patterns (templates, examples, guardrails)   |
+| Path                                             | Purpose                                                   |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| `oc-skill-creator/SKILL.md`                      | The skill: principles, anatomy, 6-step creation process   |
+| `oc-skill-creator/scripts/init_skill.py`         | Scaffold a new skill directory from template              |
+| `oc-skill-creator/scripts/quick_validate.py`     | Validate frontmatter against the AgentSkills spec         |
+| `oc-skill-creator/scripts/package_skill.py`      | Validate + zip a skill into a shareable `.skill` file     |
+| `oc-skill-creator/references/workflows.md`       | Multi-step process patterns (sequential, routing, loops)  |
+| `oc-skill-creator/references/output-patterns.md` | Output format patterns (templates, examples, guardrails)  |
 
 ## Usage
 
@@ -45,24 +55,28 @@ Or — often better — just **work through a task with the agent first**, then 
 
 > Turn what we just did into a reusable skill using oc-skill-creator.
 
-OpenCode picks up the skill, interviews you about triggers and examples (or mines the session you just had), scaffolds the folder, writes the scripts, tests them, and packages a distributable `.skill` file. You review; the agent does the typing.
+OpenCode picks up the skill, interviews you about triggers and examples (or mines the session you just had), scaffolds the folder, writes the scripts, and tests them. You review; the agent does the typing.
 
 ### The scripts (what the agent runs for you)
 
-Run these by hand only if you prefer working without an agent:
+Run these by hand only if you prefer working without an agent. Run them from the folder that contains `SKILL.md` (after the OpenCode clone: `cd ~/.config/opencode/skills/oc-skill-creator/oc-skill-creator`):
 
 ```bash
-# Scaffold
-python scripts/init_skill.py my-skill --path .opencode/skill --resources scripts,references --examples
+# Scaffold: --path is the PARENT directory; this creates ~/.config/opencode/skills/my-skill/
+python3 scripts/init_skill.py my-skill --path ~/.config/opencode/skills --resources scripts,references --examples
 
-# Validate
-python scripts/quick_validate.py path/to/my-skill
+# Validate the skill folder itself (the one that contains SKILL.md)
+python3 scripts/quick_validate.py ~/.config/opencode/skills/my-skill
 
-# Package (auto-validates first; junk files like .env, __pycache__, .DS_Store are skipped)
-python scripts/package_skill.py path/to/my-skill ./dist
+# Package for sharing (validates first)
+python3 scripts/package_skill.py ~/.config/opencode/skills/my-skill ./dist
 ```
 
-`quick_validate.py` needs PyYAML (`pip install pyyaml`).
+What the validator rejects: a missing or empty `name`/`description`, a name that is not lowercase-hyphen-case or does not match its folder, a description that still holds the `[TODO]` placeholder, and unknown frontmatter keys. It warns (but passes) on `[TODO]` left in the body and on relative links that point to missing files.
+
+What the packager leaves out (each skipped path is printed): symlinks, `.git`, `.venv`, `node_modules`, caches, `.DS_Store`, and files that often hold secrets — `.env*`, `.envrc`, `.netrc`, `.npmrc`, `.pypirc`, SSH keys, `*.pem`, `*.key`, `credentials*`. Still check the file list before you share a `.skill`.
+
+To install a `.skill` file you received: unzip it into a skills directory (it contains the `<name>/` folder).
 
 ## Credits & license
 

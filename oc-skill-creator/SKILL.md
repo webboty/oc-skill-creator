@@ -6,7 +6,7 @@ license: Apache-2.0
 
 # OC Skill Creator
 
-This skill provides guidance for creating effective skills.
+The scripts named below live in this skill's own `scripts/` folder, next to this SKILL.md. Run them as `python3 <this-skill-dir>/scripts/<script>.py`; the current working directory is usually not this skill's folder.
 
 ## About Skills
 
@@ -65,7 +65,7 @@ skill-name/
 
 Every SKILL.md consists of:
 
-- **Frontmatter** (YAML): Contains `name` and `description` fields. These are the only fields that OpenCode reads to determine when the skill gets used, thus it is very important to be clear and comprehensive in describing what the skill is, and when it should be used.
+- **Frontmatter** (YAML): Contains `name` and `description` fields (plus optional fields, see Step 4). `name` and `description` are what OpenCode reads to decide when the skill gets used, thus it is very important to be clear and comprehensive in describing what the skill is, and when it should be used.
 - **Body** (Markdown): Instructions and guidance for using the skill. Only loaded AFTER the skill triggers (if at all).
 
 #### Bundled Resources (optional)
@@ -151,7 +151,7 @@ For Skills with multiple domains, organize content by domain to avoid loading ir
 ```
 bigquery-skill/
 ├── SKILL.md (overview and navigation)
-└── reference/
+└── references/
     ├── finance.md (revenue, billing metrics)
     ├── sales.md (opportunities, pipeline)
     ├── product.md (API usage, features)
@@ -207,7 +207,7 @@ Skill creation involves these steps:
 2. Plan reusable skill contents (scripts, references, assets)
 3. Initialize the skill (run init_skill.py)
 4. Edit the skill (implement resources and write SKILL.md)
-5. Package the skill (run package_skill.py)
+5. Validate the skill (run quick_validate.py); package it only if it will be shared
 6. Iterate based on real usage
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
@@ -272,20 +272,22 @@ When creating a new skill from scratch, always run the `init_skill.py` script. T
 Usage:
 
 ```bash
-scripts/init_skill.py <skill-name> --path <output-directory> [--resources scripts,references,assets] [--examples]
+python3 scripts/init_skill.py <skill-name> --path <parent-directory> [--resources scripts,references,assets] [--examples]
 ```
+
+`--path` is the PARENT directory. Use a directory OpenCode loads skills from: `~/.config/opencode/skills` (global) or `.opencode/skills` (this project), unless the user names another location.
 
 Examples:
 
 ```bash
-scripts/init_skill.py my-skill --path skills/public
-scripts/init_skill.py my-skill --path skills/public --resources scripts,references
-scripts/init_skill.py my-skill --path skills/public --resources scripts --examples
+python3 scripts/init_skill.py my-skill --path ~/.config/opencode/skills
+python3 scripts/init_skill.py my-skill --path .opencode/skills --resources scripts,references
+python3 scripts/init_skill.py my-skill --path .opencode/skills --resources scripts --examples
 ```
 
 The script:
 
-- Creates the skill directory at the specified path
+- Creates `<parent-directory>/<skill-name>/`
 - Generates a SKILL.md template with proper frontmatter and TODO placeholders
 - Optionally creates resource directories based on `--resources`
 - Optionally adds example files when `--examples` is set
@@ -327,37 +329,42 @@ Write the YAML frontmatter with `name` and `description`:
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to the agent.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when the agent needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
 
-Do not include any other fields in YAML frontmatter.
+Optional fields, only when they carry real information (the validator rejects any other key):
+
+- `license`: a license name or the name of a bundled license file (e.g. `Apache-2.0`).
+- `compatibility`: environment requirements, max 500 characters (e.g. `Requires Python 3 and PyYAML`). Most skills do not need it.
+- `metadata`: a key-value map for client-specific settings; OpenCode reads keys such as `opencode/slash` and `opencode/autoinvoke`.
+- `allowed-tools`: space-separated pre-approved tools. Experimental; support varies by harness.
+
+##### Test the description
+
+To check triggering, write 5 realistic requests that SHOULD load the skill and 5 near-misses that should NOT (same domain, different task). For each one, ask: would an agent that sees only `name` + `description` pick this skill? Reword the description until all 10 come out right. Re-run the list after every description change. When the user reports a missed or a wrong trigger, add that request to the list.
 
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
 
-### Step 5: Packaging a Skill
+### Step 5: Validating and Packaging a Skill
 
-Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
-
-```bash
-scripts/package_skill.py <path/to/skill-folder>
-```
-
-Optional output directory specification:
+Always validate the finished skill. Pass the skill folder itself (the one that contains SKILL.md):
 
 ```bash
-scripts/package_skill.py <path/to/skill-folder> ./dist
+python3 scripts/quick_validate.py <path/to/skill-folder>
 ```
 
-The packaging script will:
+The validator:
 
-1. **Validate** the skill automatically, checking:
-   - YAML frontmatter format and required fields
-   - Skill naming conventions and directory structure
-   - Description completeness and quality
-   - File organization and resource references
+- Rejects: no frontmatter or invalid YAML; missing or empty `name`/`description`; a name that is not lowercase-hyphen-case, is longer than 64 characters, or does not match its folder; a description that still holds the `[TODO]` placeholder, contains `<` or `>`, or is longer than 1024 characters; unknown frontmatter keys; malformed optional fields.
+- Warns (still exit 0): `[TODO]` left in the body, and relative Markdown links (outside code blocks) that point to missing files. Fix every warning before delivering.
+- Does NOT judge description quality; use the description test in Step 4.
 
-2. **Package** the skill if validation passes, creating a .skill file named after the skill (e.g., `my-skill.skill`) that includes all files and maintains the proper directory structure for distribution. The .skill file is a zip file with a .skill extension.
+A skill in an OpenCode skills directory is ready to use once it validates; no package is needed. Package it only when the user wants to share it:
 
-If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
+```bash
+python3 scripts/package_skill.py <path/to/skill-folder> ./dist
+```
+
+Without an output directory, the `.skill` file is written to the current working directory. The packager validates first and stops on errors. It then writes `<name>.skill` (a zip containing the `<name>/` folder). It never adds symlinks, VCS/cache/venv folders, `.DS_Store`, or files that often hold secrets (`.env*`, `.netrc`, `.npmrc`, SSH keys, `*.pem`, `*.key`, `credentials*`); each skipped path is printed. Read the Added/Skipped list before handing the file over. To install a `.skill`, unzip it into a skills directory.
 
 ### Step 6: Iterate
 
