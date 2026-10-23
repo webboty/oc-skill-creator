@@ -25,6 +25,18 @@ git clone https://github.com/<you>/oc-skill-creator ~/.config/opencode/skill/oc-
 
 ## Usage
 
+Just prompt your agent:
+
+> Please create a skill about **rotating PDFs** using the oc-skill-creator skill.
+
+> Turn the deploy workflow we just did into a reusable skill with oc-skill-creator.
+
+OpenCode picks up the skill, interviews you about triggers and examples, scaffolds the folder, writes the scripts, tests them, and packages a distributable `.skill` file. You review; the agent does the typing.
+
+### The scripts (what the agent runs for you)
+
+Run these by hand only if you prefer working without an agent:
+
 ```bash
 # Scaffold
 python scripts/init_skill.py my-skill --path .opencode/skill --resources scripts,references --examples
