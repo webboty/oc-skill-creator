@@ -277,7 +277,7 @@ def init_skill(skill_name, path, resources, include_examples):
         Path to created skill directory, or None if error
     """
     # Determine skill directory path
-    skill_dir = Path(path).resolve() / skill_name
+    skill_dir = Path(path).expanduser().resolve() / skill_name
 
     # Check if directory already exists
     if skill_dir.exists():
@@ -338,6 +338,8 @@ def init_skill(skill_name, path, resources, include_examples):
 
 
 def main():
+    # A piped stdout on Windows uses the legacy code page; never crash on a path.
+    sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(
         description="Create a new skill directory with a SKILL.md template.",
     )

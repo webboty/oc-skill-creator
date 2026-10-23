@@ -4,21 +4,43 @@ An [AgentSkill](https://agentskills.io/specification) for [OpenCode](https://ope
 
 ## Install
 
-**OpenCode (recommended)** — one command, then restart OpenCode:
+You need [git](https://git-scm.com/downloads) and Python 3.9 or newer.
+
+**OpenCode (recommended)** — one command, then restart OpenCode.
+
+macOS / Linux:
 
 ```bash
 git clone https://github.com/webboty/oc-skill-creator ~/.config/opencode/skills/oc-skill-creator
 ```
 
-Update later with `git -C ~/.config/opencode/skills/oc-skill-creator pull`. OpenCode searches the clone for the `SKILL.md` inside it, so the extra repo files do no harm. For one project only, clone into `.opencode/skills/oc-skill-creator` instead.
+Windows (PowerShell):
 
-**Claude Code and other harnesses** — these expect `SKILL.md` exactly one level down, so copy only the inner skill folder:
+```powershell
+git clone https://github.com/webboty/oc-skill-creator "$HOME\.config\opencode\skills\oc-skill-creator"
+```
+
+Update later with `git pull` inside that folder. OpenCode searches the clone for the `SKILL.md` inside it, so the extra repo files do no harm. For one project only, clone into `.opencode/skills/oc-skill-creator` instead.
+
+**Claude Code and other harnesses** — these expect `SKILL.md` exactly one level down, so copy only the inner skill folder.
+
+macOS / Linux:
 
 ```bash
 git clone https://github.com/webboty/oc-skill-creator /tmp/oc-skill-creator
 mkdir -p ~/.claude/skills
 cp -R /tmp/oc-skill-creator/oc-skill-creator ~/.claude/skills/
 ```
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/webboty/oc-skill-creator "$env:TEMP\oc-skill-creator"
+New-Item -ItemType Directory -Force "$HOME\.claude\skills" | Out-Null
+Copy-Item -Recurse "$env:TEMP\oc-skill-creator\oc-skill-creator" "$HOME\.claude\skills\"
+```
+
+On Windows, `~` in a command line is often not expanded to your home folder, and git then creates a folder literally named `~`. Use `$HOME` (PowerShell) or `%USERPROFILE%` (cmd) as shown.
 
 No git? [Download the ZIP](https://github.com/webboty/oc-skill-creator/archive/refs/heads/main.zip), unzip it, and move the inner `oc-skill-creator/` folder into a skills directory.
 
@@ -30,9 +52,9 @@ No git? [Download the ZIP](https://github.com/webboty/oc-skill-creator/archive/r
 | Claude Code | `~/.claude/skills/`          | `.claude/skills/`   |
 | Any harness | point its skill loader at the folder — the SKILL.md format is portable | |
 
-OpenCode also loads the singular `skill/` folders and `~/.claude/skills/` and `~/.agents/skills/`. Use the plural `skills/` from the OpenCode docs.
+`~` is your home folder: `/Users/<you>` on macOS, `/home/<you>` on Linux, `C:\Users\<you>` on Windows. OpenCode also loads the singular `skill/` folders and `~/.claude/skills/` and `~/.agents/skills/`. Use the plural `skills/` from the OpenCode docs.
 
-The guidance and references are harness-neutral; only the install paths differ. The bundled scripts are plain Python 3. `quick_validate.py` and `package_skill.py` need PyYAML (`pip install pyyaml`); `init_skill.py` needs nothing.
+The guidance and references are harness-neutral; only the install paths differ. The bundled scripts are plain Python 3.9+ and run on macOS, Linux and Windows (tested in CI on all three). `quick_validate.py` and `package_skill.py` need PyYAML (`pip install pyyaml`); `init_skill.py` needs nothing.
 
 ## What's in the box
 
@@ -72,9 +94,18 @@ python3 scripts/quick_validate.py ~/.config/opencode/skills/my-skill
 python3 scripts/package_skill.py ~/.config/opencode/skills/my-skill ./dist
 ```
 
+Windows (PowerShell) — use `python` (or `py`) instead of `python3`, which on Windows often opens the Microsoft Store instead:
+
+```powershell
+cd "$HOME\.config\opencode\skills\oc-skill-creator\oc-skill-creator"
+python scripts\init_skill.py my-skill --path "$HOME\.config\opencode\skills" --resources scripts,references --examples
+python scripts\quick_validate.py "$HOME\.config\opencode\skills\my-skill"
+python scripts\package_skill.py "$HOME\.config\opencode\skills\my-skill" .\dist
+```
+
 What the validator rejects: a missing or empty `name`/`description`, a name that is not lowercase-hyphen-case or does not match its folder, a description that still holds the `[TODO]` placeholder, and unknown frontmatter keys. It warns (but passes) on `[TODO]` left in the body and on relative links that point to missing files.
 
-What the packager leaves out (each skipped path is printed): symlinks, `.git`, `.venv`, `node_modules`, caches, `.DS_Store`, and files that often hold secrets — `.env*`, `.envrc`, `.netrc`, `.npmrc`, `.pypirc`, SSH keys, `*.pem`, `*.key`, `credentials*`. Still check the file list before you share a `.skill`.
+What the packager leaves out (each skipped path is printed): symlinks, `.git`, `.venv`, `node_modules`, caches, OS junk (`.DS_Store`, `Thumbs.db`, `desktop.ini`), and files that often hold secrets — `.env*`, `.envrc`, `.netrc`, `.npmrc`, `.pypirc`, SSH keys, `*.pem`, `*.key`, `credentials*`. Still check the file list before you share a `.skill`.
 
 To install a `.skill` file you received: unzip it into a skills directory (it contains the `<name>/` folder).
 

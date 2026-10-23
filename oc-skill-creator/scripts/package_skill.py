@@ -36,6 +36,7 @@ EXCLUDE_DIRS = {
     "node_modules",
     ".idea",
     ".vscode",
+    "$recycle.bin",
 }
 # Matched against the file name, case-insensitively.
 EXCLUDE_FILE_PATTERNS = (
@@ -44,6 +45,8 @@ EXCLUDE_FILE_PATTERNS = (
     "*.skill",
     ".ds_store",
     "thumbs.db",
+    "desktop.ini",
+    "ehthumbs.db",
     "*.swp",
     # secrets
     ".env",
@@ -76,7 +79,7 @@ def skip_reason(file_path, rel, skill_path):
     # Catches files reached through a symlinked parent directory.
     if not file_path.resolve().is_relative_to(skill_path):
         return "outside the skill folder"
-    if any(part in EXCLUDE_DIRS for part in rel.parts[:-1]):
+    if any(part.lower() in EXCLUDE_DIRS for part in rel.parts[:-1]):
         return "excluded directory"
     name = rel.name.lower()
     if any(fnmatch.fnmatch(name, pattern) for pattern in ALLOWED_FILE_PATTERNS):
@@ -97,7 +100,7 @@ def package_skill(skill_path, output_dir=None):
     Returns:
         Path to the created .skill file, or None if error
     """
-    skill_path = Path(skill_path).resolve()
+    skill_path = Path(skill_path).expanduser().resolve()
 
     # Validate skill folder exists
     if not skill_path.exists():
@@ -127,7 +130,7 @@ def package_skill(skill_path, output_dir=None):
     # Determine output location
     skill_name = skill_path.name
     if output_dir:
-        output_path = Path(output_dir).resolve()
+        output_path = Path(output_dir).expanduser().resolve()
         output_path.mkdir(parents=True, exist_ok=True)
     else:
         output_path = Path.cwd()
@@ -163,6 +166,8 @@ def package_skill(skill_path, output_dir=None):
 
 
 def main():
+    # A piped stdout on Windows uses the legacy code page; never crash on a path.
+    sys.stdout.reconfigure(errors="backslashreplace")
     if len(sys.argv) < 2:
         print("Usage: python3 scripts/package_skill.py <path/to/skill-folder> [output-directory]")
         print("\nExample:")

@@ -119,13 +119,14 @@ def validate_skill(skill_path):
 
     Returns (valid, message). Non-fatal warnings are appended to the message.
     """
-    skill_path = Path(skill_path).resolve()
+    skill_path = Path(skill_path).expanduser().resolve()
 
     skill_md = skill_path / "SKILL.md"
     if not skill_md.exists():
         return False, f"SKILL.md not found in {skill_path}"
 
-    content = skill_md.read_text(encoding="utf-8")
+    # utf-8-sig: Windows Notepad writes a BOM before the frontmatter.
+    content = skill_md.read_text(encoding="utf-8-sig")
     if not content.startswith("---"):
         return False, "No YAML frontmatter found"
 
@@ -170,6 +171,8 @@ def validate_skill(skill_path):
 
 
 if __name__ == "__main__":
+    # A piped stdout on Windows uses the legacy code page; never crash on a path.
+    sys.stdout.reconfigure(errors="backslashreplace")
     if len(sys.argv) != 2:
         print("Usage: python3 quick_validate.py <skill_directory>")
         sys.exit(1)

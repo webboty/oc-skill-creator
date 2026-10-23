@@ -6,7 +6,7 @@ license: Apache-2.0
 
 # OC Skill Creator
 
-The scripts named below live in this skill's own `scripts/` folder, next to this SKILL.md. Run them as `python3 <this-skill-dir>/scripts/<script>.py`; the current working directory is usually not this skill's folder.
+The scripts named below live in this skill's own `scripts/` folder, next to this SKILL.md. Run them as `python3 <this-skill-dir>/scripts/<script>.py`; the current working directory is usually not this skill's folder. On Windows, use `python` (or `py`) instead of `python3`, and quote paths that contain spaces. The scripts expand `~` themselves and need Python 3.9+; `quick_validate.py` and `package_skill.py` also need PyYAML (`pip install pyyaml`).
 
 ## About Skills
 

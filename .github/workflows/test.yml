@@ -1,0 +1,63 @@
+name: test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.9", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install pyyaml
+      - run: python tests/smoke_test.py
+
+  windows-install:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install pyyaml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install exactly as the README says (PowerShell)
+        run: |
+          git clone --branch "${{ github.ref_name }}" "${{ github.server_url }}/${{ github.repository }}" "$HOME\.config\opencode\skills\oc-skill-creator"
+          if (-not (Test-Path "$HOME\.config\opencode\skills\oc-skill-creator\oc-skill-creator\SKILL.md")) { throw "SKILL.md not where expected" }
+      - name: README script commands work from the skill folder
+        run: |
+          cd "$HOME\.config\opencode\skills\oc-skill-creator\oc-skill-creator"
+          python scripts\init_skill.py my-skill --path "$HOME\.config\opencode\skills" --resources scripts,references --examples
+          if ($LASTEXITCODE -ne 0) { throw "init failed" }
+          python scripts\quick_validate.py "$HOME\.config\opencode\skills\oc-skill-creator\oc-skill-creator"
+          if ($LASTEXITCODE -ne 0) { throw "self-validation failed" }
+          python scripts\package_skill.py "$HOME\.config\opencode\skills\oc-skill-creator\oc-skill-creator" "$HOME\dist"
+          if ($LASTEXITCODE -ne 0) { throw "packaging failed" }
+      - name: OpenCode on Windows loads the skill
+        run: |
+          npm install -g opencode-ai
+          opencode --version
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\proj" | Out-Null
+          cd "$env:RUNNER_TEMP\proj"
+          git init -q
+          opencode debug skill > "$env:RUNNER_TEMP\skills.json"
+          $skills = Get-Content "$env:RUNNER_TEMP\skills.json" -Raw | ConvertFrom-Json
+          $skills | ForEach-Object { "$($_.name) | $($_.location)" }
+          if (-not ($skills | Where-Object { $_.name -eq "oc-skill-creator" })) { throw "OpenCode did not load oc-skill-creator" }
