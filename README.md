@@ -4,13 +4,25 @@ An [AgentSkill](https://agentskills.io/specification) for [OpenCode](https://ope
 
 ## Install
 
-Clone into OpenCode's global skill directory:
+oc-skill-creator is built for [OpenCode](https://opencode.ai/docs/skills/) and follows the open [AgentSkills](https://agentskills.io/specification) format, so it also loads in other harnesses (see below). Pick one:
 
-```bash
-git clone https://github.com/<you>/oc-skill-creator ~/.config/opencode/skill/oc-skill-creator
-```
+**OpenCode (recommended)** — put the `oc-skill-creator/` folder in a skills directory, then restart the agent:
 
-…or drop the `oc-skill-creator/` folder into any project's `.opencode/skill/`.
+| Method       | Command                                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| git clone    | `git clone https://github.com/webboty/oc-skill-creator ~/.config/opencode/skill/oc-skill-creator`                |
+| Download ZIP | [Code → Download ZIP](https://github.com/webboty/oc-skill-creator/archive/refs/heads/main.zip), unzip, move the `oc-skill-creator/` folder to `~/.config/opencode/skill/` |
+| Per-project  | same folder inside a project: `.opencode/skill/oc-skill-creator/`                                                  |
+
+**Other AgentSkills-compatible harnesses** — same folder, different drop location:
+
+| Harness     | Global path                    | Project path               |
+| ----------- | ------------------------------ | -------------------------- |
+| OpenCode    | `~/.config/opencode/skill/`  | `.opencode/skill/`         |
+| Claude Code | `~/.claude/skills/`          | `.claude/skills/`        |
+| Any harness | point its skill loader at the folder — the SKILL.md format is portable |
+
+The guidance and references are harness-neutral; only the install paths differ. The bundled scripts are plain Python 3 (only `quick_validate.py` has a dep: `pip install pyyaml`).
 
 ## What's in the box
 
