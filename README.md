@@ -27,11 +27,13 @@ git clone https://github.com/<you>/oc-skill-creator ~/.config/opencode/skill/oc-
 
 Just prompt your agent:
 
-> Please create a skill about **rotating PDFs** using the oc-skill-creator skill.
+> Please create a skill about [topic], using the oc-skill-creator skill. The skill should [what it must do, expected inputs/outputs, trigger phrases].
 
-> Turn the deploy workflow we just did into a reusable skill with oc-skill-creator.
+Or — often better — just **work through a task with the agent first**, then say at the end of the session:
 
-OpenCode picks up the skill, interviews you about triggers and examples, scaffolds the folder, writes the scripts, tests them, and packages a distributable `.skill` file. You review; the agent does the typing.
+> Turn what we just did into a reusable skill using oc-skill-creator.
+
+OpenCode picks up the skill, interviews you about triggers and examples (or mines the session you just had), scaffolds the folder, writes the scripts, tests them, and packages a distributable `.skill` file. You review; the agent does the typing.
 
 ### The scripts (what the agent runs for you)
 

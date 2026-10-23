@@ -224,7 +224,7 @@ Follow these steps in order, skipping only if there is a clear reason why they a
 
 Skip this step only when the skill's usage patterns are already clearly understood. It remains valuable even when working with an existing skill.
 
-To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.
+To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from three sources: direct user examples, examples mined from the current session (if the user says "turn what we just did into a skill", extract the tools used, step order, corrections the user made, and input/output formats from the conversation before asking anything), or generated examples that are validated with user feedback.
 
 For example, when building an image-editor skill, relevant questions include:
 
